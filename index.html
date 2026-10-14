@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Cronômetro de Descanso</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+
+    /* SVG Ring Smooth Depletion */
+    .progress-ring__circle {
+      transition: stroke-dashoffset 0.25s linear, stroke 0.4s ease;
+      transform: rotate(-90deg);
+      transform-origin: 50% 50%;
+    }
+
+    /* Subtle pulsing glow around the timer ring */
+    .timer-glow-purple {
+      filter: drop-shadow(0 0 14px rgba(192, 38, 211, 0.45));
+    }
+    .timer-glow-amber {<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Cronômetro de Descanso</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+
+    /* SVG Ring Smooth Depletion */
+    .progress-ring__circle {
+      transition: stroke-dashoffset 0.25s linear, stroke 0.4s ease;
+      transform: rotate(-90deg);
+      transform-origin: 50% 50%;
+    }
+
+    /* Subtle pulsing glow around the timer ring */
+    .timer-glow-purple {
+      filter: drop-shadow(0 0 14px rgba(192, 38, 211, 0.45));
+    }
+    .timer-glow-amber {
+      filter: drop-shadow(0 0 16px rgba(245, 158, 11, 0.55));
+    }
+    .timer-glow-emerald {
+      filter: drop-shadow(0 0 20px rgba(16, 185, 129, 0.75));
+    }
+
+    /* Soft pulse keyframes for final seconds */
+    @keyframes subtle-pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.025); }
+    }
+    .animate-urgent {
+      animation: subtle-pulse 0.8s ease-in-out infinite;
+    }
+  </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-3 text-slate-100">
+
+  <!-- Main Card Modal Wrapper -->
+  <div class="w-full max-w-xs sm:max-w-sm bg-[#121217]/95 border border-purple-500/25 backdrop-blur-md rounded-3xl p-5 shadow-2xl flex flex-col items-center relative overflow-hidden transition-all duration-300">
+    
+    <!-- Ambient background light aura -->
+    <div id="ambientAura" class="absolute -top-16 -left-16 w-44 h-44 bg-fuchsia-600/15 rounded-full blur-3xl pointer-events-none transition-colors duration-500"></div>
+    <div id="ambientAura2" class="absolute -bottom-16 -right-16 w-44 h-44 bg-purple-600/15 rounded-full blur-3xl pointer-events-none transition-colors duration-500"></div>
+
+    <!-- Header Section -->
+    <div class="w-full flex items-center justify-between mb-3 z-10">
+      <div class="flex items-center gap-2">
+        <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-purple-500/20 text-fuchsia-400 text-xs">⏱</span>
+        <span id="titleLabel" class="text-xs font-semibold tracking-wider uppercase text-slate-300">Intervalo de Descanso</span>
+      </div>
+      <button id="btnDismiss" aria-label="Fechar" class="text-slate-400 hover:text-white p-1.5 rounded-full hover:bg-white/10 transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Circular SVG Progress Display -->
+    <div id="ringWrapper" class="relative my-2 flex items-center justify-center timer-glow-purple transition-all duration-500">
+      <svg class="w-56 h-56 sm:w-60 sm:h-60" viewBox="0 0 220 220">
+        <!-- Background Track Ring -->
+        <circle
+          cx="110"
+          cy="110"
+          r="92"
+          stroke="#262633"
+          stroke-width="12"
+          fill="transparent"
+        />
+        <!-- Animated Countdown Ring -->
+        <circle
+          id="progressCircle"
+          class="progress-ring__circle"
+          cx="110"
+          cy="110"
+          r="92"
+          stroke="#c026d3"
+          stroke-width="12"
+          stroke-linecap="round"
+          fill="transparent"
+        />
+      </svg>
+
+      <!-- Center Countdown Digits -->
+      <div class="absolute flex flex-col items-center justify-center text-center select-none pointer-events-none">
+        <span id="timeDisplay" class="text-4xl sm:text-5xl font-black tracking-tight text-white font-mono">01:00</span>
+        <span id="statusBadge" class="mt-1 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-purple-500/20 text-fuchsia-300 transition-colors duration-300">
+          Recuperando
+        </span>
+      </div>
+    </div>
+
+    <!-- Action Controls Row -->
+    <div class="w-full grid grid-cols-3 gap-2 mt-4 z-10">
+      <!-- Quick +15s Button -->
+      <button id="btnAdd15" class="flex items-center justify-center gap-1 py-2.5 px-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold active:scale-95 transition-transform text-slate-200">
+        <span>+15s</span>
+      </button>
+
+      <!-- Play / Pause Main Button -->
+      <button id="btnToggle" class="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-2xl bg-gradient-to-r from-fuchsia-600 to-purple-600 text-white shadow-lg shadow-purple-600/30 text-xs font-bold active:scale-95 transition-all">
+        <svg id="playPauseIcon" class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+          <!-- Default Pause Icon -->
+          <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+        </svg>
+        <span id="playPauseText">Pausar</span>
+      </button>
+
+      <!-- Reset Button -->
+      <button id="btnReset" class="flex items-center justify-center gap-1 py-2.5 px-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold active:scale-95 transition-transform text-slate-200">
+        <svg class="w-3.5 h-3.5 stroke-current" fill="none" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+        </svg>
+        <span>Reiniciar</span>
+      </button>
+    </div>
+
+    <!-- Ready / Finish Action Button -->
+    <button id="btnFinish" class="w-full mt-3 py-2.5 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-semibold text-xs flex items-center justify-center gap-1.5 hover:bg-emerald-500/25 active:scale-95 transition-all z-10">
+      <span>Pronto para Próxima Série</span>
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+      </svg>
+    </button>
+
+  </div>
+
+  <script>
+    /* Audio alert generator via Web Audio API (No external sound files required) */
+    class SoundAlert {
+      constructor() {
+        this.audioCtx = null;
+      }
+
+      init() {
+        if (!this.audioCtx) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioContextClass) {
+            this.audioCtx = new AudioContextClass();
+          }
+        }
+      }
+
+      playBeep(frequency = 880, duration = 0.15, type = 'sine') {
+        try {
+          this.init();
+          if (!this.audioCtx) return;
+          if (this.audioCtx.state === 'suspended') {
+            this.audioCtx.resume();
+          }
+
+          const osc = this.audioCtx.createOscillator();
+          const gain = this.audioCtx.createGain();
+
+          osc.type = type;
+          osc.frequency.setValueAtTime(frequency, this.audioCtx.currentTime);
+
+          gain.gain.setValueAtTime(0.2, this.audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + duration);
+
+          osc.connect(gain);
+          gain.connect(this.audioCtx.destination);
+
+          osc.start();
+          osc.stop(this.audioCtx.currentTime + duration);
+        } catch (e) {
+          console.warn("Audio playback not allowed yet:", e);
+        }
+      }
+
+      playFinishFanfare() {
+        // High-energy double chime on completion
+        this.playBeep(659.25, 0.15, 'triangle'); // E5
+        setTimeout(() => this.playBeep(880, 0.35, 'triangle'), 160); // A5
+      }
+    }
+
+    const sound = new SoundAlert();
+
+    // DOM Elements
+    const circle = document.getElementById('progressCircle');
+    const ringWrapper = document.getElementById('ringWrapper');
+    const timeDisplay = document.getElementById('timeDisplay');
+    const statusBadge = document.getElementById('statusBadge');
+    const ambientAura = document.getElementById('ambientAura');
+    const ambientAura2 = document.getElementById('ambientAura2');
+
+    const btnToggle = document.getElementById('btnToggle');
+    const playPauseIcon = document.getElementById('playPauseIcon');
+    const playPauseText = document.getElementById('playPauseText');
+    const btnAdd15 = document.getElementById('btnAdd15');
+    const btnReset = document.getElementById('btnReset');
+    const btnFinish = document.getElementById('btnFinish');
+    const btnDismiss = document.getElementById('btnDismiss');
+
+    // SVG Circle setup: Circumference calculation for r=92
+    const radius = circle.r.baseVal.value;
+    const circumference = 2 * Math.PI * radius;
+    circle.style.strokeDasharray = `${circumference} ${circumference}`;
+
+    // Parse target seconds from URL query param: e.g. ?seconds=45 or default 60
+    function getInitialSeconds() {
+      const params = new URLSearchParams(window.location.search);
+      const querySec = parseInt(params.get('seconds'), 10);
+      if (!isNaN(querySec) && querySec > 0) {
+        return querySec;
+      }
+      return 60;
+    }
+
+    let totalDuration = getInitialSeconds();
+    let remainingSeconds = totalDuration;
+    let timerInterval = null;
+    let isRunning = false;
+    let isCompleted = false;
+
+    // Format mm:ss
+    function formatTime(totalSec) {
+      const m = Math.floor(totalSec / 60);
+      const s = totalSec % 60;
+      return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    }
+
+    // Update progress circle offset and dynamic color schemes
+    function updateDisplay() {
+      timeDisplay.textContent = formatTime(remainingSeconds);
+
+      // Fraction of time remaining
+      const ratio = totalDuration > 0 ? (remainingSeconds / totalDuration) : 0;
+      const offset = circumference - (ratio * circumference);
+      circle.style.strokeDashoffset = offset;
+
+      // Color stage evaluation
+      if (remainingSeconds <= 0) {
+        // Complete stage: Solid Emerald Green
+        circle.style.stroke = '#10b981';
+        ringWrapper.className = 'relative my-2 flex items-center justify-center timer-glow-emerald';
+        ringWrapper.classList.remove('animate-urgent');
+        statusBadge.textContent = 'Tempo Concluído!';
+        statusBadge.className = 'mt-1 text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+        ambientAura.className = 'absolute -top-16 -left-16 w-44 h-44 bg-emerald-600/20 rounded-full blur-3xl pointer-events-none transition-colors duration-500';
+        ambientAura2.className = 'absolute -bottom-16 -right-16 w-44 h-44 bg-emerald-600/20 rounded-full blur-3xl pointer-events-none transition-colors duration-500';
+      } else if (remainingSeconds <= 15) {
+        // Urgency stage: Warning Amber
+        circle.style.stroke = '#f59e0b';
+        ringWrapper.className = 'relative my-2 flex items-center justify-center timer-glow-amber animate-urgent';
+        statusBadge.textContent = 'Atenção: Finalizando';
+        statusBadge.className = 'mt-1 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30';
+        ambientAura.className = 'absolute -top-16 -left-16 w-44 h-44 bg-amber-600/20 rounded-full blur-3xl pointer-events-none transition-colors duration-500';
+        ambientAura2.className = 'absolute -bottom-16 -right-16 w-44 h-44 bg-amber-600/20 rounded-full blur-3xl pointer-events-none transition-colors duration-500';
+      } else {
+        // Normal stage: Brand Fuchsia/Purple
+        circle.style.stroke = '#c026d3';
+        ringWrapper.className = 'relative my-2 flex items-center justify-center timer-glow-purple';
+        ringWrapper.classList.remove('animate-urgent');
+        statusBadge.textContent = isRunning ? 'Recuperando' : 'Pausado';
+        statusBadge.className = isRunning
+          ? 'mt-1 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-purple-500/20 text-fuchsia-300'
+          : 'mt-1 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-white/10 text-slate-300';
+        ambientAura.className = 'absolute -top-16 -left-16 w-44 h-44 bg-fuchsia-600/15 rounded-full blur-3xl pointer-events-none transition-colors duration-500';
+        ambientAura2.className = 'absolute -bottom-16 -right-16 w-44 h-44 bg-purple-600/15 rounded-full blur-3xl pointer-events-none transition-colors duration-500';
+      }
+    }
+
+    function triggerFinishedNotification() {
+      sound.playFinishFanfare();
+
+      // Trigger phone vibration if supported
+      if ('vibrate' in navigator) {
+        try {
+          navigator.vibrate([200, 100, 250]);
+        } catch (e) {
+          // Ignore vibration block on strict browsers
+        }
+      }
+    }
+
+    function tick() {
+      if (remainingSeconds > 0) {
+        // Countdown single short ping on 3, 2, 1
+        if (remainingSeconds <= 3 && remainingSeconds >= 1) {
+          sound.playBeep(440, 0.08, 'sine');
+        }
+        remainingSeconds--;
+        updateDisplay();
+
+        if (remainingSeconds === 0) {
+          clearInterval(timerInterval);
+          isRunning = false;
+          isCompleted = true;
+          updateToggleBtn();
+          updateDisplay();
+          triggerFinishedNotification();
+        }
+      }
+    }
+
+    function startTimer() {
+      if (isCompleted) {
+        remainingSeconds = totalDuration;
+        isCompleted = false;
+      }
+      sound.init();
+      clearInterval(timerInterval);
+      timerInterval = setInterval(tick, 1000);
+      isRunning = true;
+      updateToggleBtn();
+      updateDisplay();
+    }
+
+    function pauseTimer() {
+      clearInterval(timerInterval);
+      isRunning = false;
+      updateToggleBtn();
+      updateDisplay();
+    }
+
+    function updateToggleBtn() {
+      if (isRunning) {
+        playPauseText.textContent = 'Pausar';
+        playPauseIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+      } else {
+        playPauseText.textContent = isCompleted ? 'Repetir' : 'Iniciar';
+        playPauseIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
+      }
+    }
+
+    // Toggle button listener
+    btnToggle.addEventListener('click', () => {
+      if (isRunning) {
+        pauseTimer();
+      } else {
+        startTimer();
+      }
+    });
+
+    // Add +15 seconds
+    btnAdd15.addEventListener('click', () => {
+      remainingSeconds += 15;
+      totalDuration += 15;
+      isCompleted = false;
+      updateDisplay();
+      if (!isRunning) {
+        startTimer();
+      }
+    });
+
+    // Reset button
+    btnReset.addEventListener('click', () => {
+      pauseTimer();
+      remainingSeconds = totalDuration;
+      isCompleted = false;
+      updateDisplay();
+    });
+
+    // Close / Complete
+    const notifyClose = () => {
+      pauseTimer();
+      if (window.parent !== window) {
+        window.parent.postMessage({ type: 'GLIDE_TIMER_CLOSED' }, '*');
+      }
+    };
+    btnFinish.addEventListener('click', notifyClose);
+    btnDismiss.addEventListener('click', notifyClose);
+
+    // Initial setup and auto-start
+    window.addEventListener('load', () => {
+      updateDisplay();
+      startTimer();
+    });
+  </script>
+</body>
+</html>
